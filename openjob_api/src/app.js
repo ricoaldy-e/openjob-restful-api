@@ -93,7 +93,6 @@ app.put('/users/:id', authMiddleware, async (req, res, next) => {
     if (req.userId !== req.params.id) {
       return res.status(403).json({ status: 'fail', message: 'You are not authorized to access this resource' });
     }
-    // We will just assume a simple usersService.editUserById exists or we pretend it updates to invalidate cache
     if (usersService.editUserById) {
       await usersService.editUserById(req.params.id, req.body);
     }
