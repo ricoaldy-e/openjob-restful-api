@@ -49,11 +49,14 @@ async function startConsumer() {
             u.email AS applicant_email,
             j.title AS job_title,
             j.company_id,
-            c.name AS company_name
+            c.name AS company_name,
+            owner.email AS owner_email,
+            owner.name AS owner_name
           FROM applications a
           JOIN users u ON a.user_id = u.id
           JOIN jobs j ON a.job_id = j.id
           JOIN companies c ON j.company_id = c.id
+          JOIN users owner ON j.owner = owner.id
           WHERE a.id = $1
         `, [application_id]);
 
@@ -62,7 +65,7 @@ async function startConsumer() {
 
           await transporter.sendMail({
             from: `"OpenJob Platform" <${process.env.MAIL_USER}>`,
-            to: process.env.MAIL_USER, // Set to process.env.MAIL_USER for testing/development
+            to: data.owner_email,
             subject: `New Application for ${data.job_title}`,
             html: `
               <h2>New Job Application Received</h2>
