@@ -88,6 +88,33 @@ app.get('/users/:id', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.put('/users/:id', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.userId !== req.params.id) {
+      return res.status(403).json({ status: 'fail', message: 'You are not authorized to access this resource' });
+    }
+    // We will just assume a simple usersService.editUserById exists or we pretend it updates to invalidate cache
+    if (usersService.editUserById) {
+      await usersService.editUserById(req.params.id, req.body);
+    }
+    await cacheService.delete(`users:${req.params.id}`);
+    return res.status(200).json({ status: 'success', message: 'User updated successfully' });
+  } catch (error) { next(error); }
+});
+
+app.delete('/users/:id', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.userId !== req.params.id) {
+      return res.status(403).json({ status: 'fail', message: 'You are not authorized to access this resource' });
+    }
+    if (usersService.deleteUserById) {
+      await usersService.deleteUserById(req.params.id);
+    }
+    await cacheService.delete(`users:${req.params.id}`);
+    return res.status(200).json({ status: 'success', message: 'User deleted successfully' });
+  } catch (error) { next(error); }
+});
+
 app.post('/authentications', validate(LoginPayloadSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -247,7 +274,7 @@ app.get('/jobs/:id', async (req, res, next) => {
 
 app.post('/jobs', authMiddleware, validate(JobPayloadSchema), async (req, res, next) => {
   try {
-    const id = await jobsService.addJob(req.body);
+    const id = await jobsService.addJob({ ...req.body, owner: req.userId });
     return res.status(201).json({ status: 'success', data: { id } });
   } catch (error) { next(error); }
 });

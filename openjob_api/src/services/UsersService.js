@@ -64,6 +64,28 @@ class UsersService {
 
     return id;
   }
+
+  async editUserById(id, { name, email }) {
+    const query = {
+      text: 'UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id',
+      values: [name, email, id],
+    };
+    const result = await pool.query(query);
+    if (!result.rows.length) {
+      throw new NotFoundError('User not found');
+    }
+  }
+
+  async deleteUserById(id) {
+    const query = {
+      text: 'DELETE FROM users WHERE id = $1 RETURNING id',
+      values: [id],
+    };
+    const result = await pool.query(query);
+    if (!result.rows.length) {
+      throw new NotFoundError('User not found');
+    }
+  }
 }
 
 module.exports = UsersService;
